@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>教えてクロード先生</title>
+<style>
+  :root{
+    --bg:#F1EBFF;
+    --bg2:#E7DEFF;
+    --ink:#2D2A4A;
+    --ink-soft:#7C77A0;
+    --surface:#FFFFFF;
+    --grape:#6C4CE0;
+    --grape-dark:#4A2FB0;
+    --grape-tint:#F3EFFF;
+    --sun:#FFC93C;
+    --coral:#FF6F91;
+    --mint:#25B583;
+    --owl-belly:#FFE7A6;
+    --radius:22px;
+    --shadow:0 10px 30px rgba(74,47,176,.14);
+    --shadow-sm:0 4px 14px rgba(74,47,176,.12);
+    font-family:"Hiragino Maru Gothic ProN","ヒラギノ丸ゴ ProN","Hiragino Sans","M PLUS Rounded 1c",system-ui,sans-serif;
+  }
+
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(120% 60% at 50% 0%, var(--bg2) 0%, var(--bg) 55%) fixed;
+    color:var(--ink);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.6;
+  }
+  .wrap{
+    max-width:440px;
+    margin:0 auto;
+    padding:20px 18px 60px;
+  }
+
+  /* ---------- header / owl ---------- */
+  header{text-align:center;padding:8px 0 6px;}
+  .owl{width:112px;height:112px;margin:0 auto;display:block;}
+  .owl .owl-body{transform-origin:50% 80%;}
+  h1{
+    font-size:27px;font-weight:800;margin:8px 0 2px;letter-spacing:.02em;
+    color:var(--grape-dark);
+  }
+  .subtitle{margin:0;color:var(--ink-soft);font-size:15px;font-weight:600;}
+
+  /* ---------- card ---------- */
+  .card{
+    background:var(--surface);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:20px 18px;
+    margin-top:18px;
+  }
+
+  /* ---------- mode toggle ---------- */
+  .modes{display:flex;gap:10px;margin-bottom:16px;}
+  .mode-btn{
+    flex:1;border:none;cursor:pointer;
+    padding:13px 6px;border-radius:16px;
+    background:var(--grape-tint);color:var(--grape-dark);
+    font:inherit;font-size:16px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;gap:7px;
+    transition:transform .12s ease, box-shadow .15s ease, background .15s ease;
+  }
+  .mode-btn .ico{font-size:20px;}
+  .mode-btn[aria-selected="true"]{
+    background:var(--grape);color:#fff;box-shadow:var(--shadow-sm);
+  }
+  .mode-btn:active{transform:scale(.96);}
+
+  /* ---------- text input ---------- */
+  textarea{
+    width:100%;min-height:96px;resize:none;
+    border:2.5px solid var(--bg2);border-radius:16px;
+    padding:14px;font:inherit;font-size:19px;color:var(--ink);
+    background:#FCFBFF;outline:none;
+  }
+  textarea::placeholder{color:#B7B2D0;font-size:16px;}
+  textarea:focus{border-color:var(--grape);}
+
+  /* ---------- photo input ---------- */
+  .photo-zone{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:8px;text-align:center;
+    border:2.5px dashed #C9BEF0;border-radius:18px;
+    padding:26px 14px;background:#FCFBFF;cursor:pointer;color:var(--grape-dark);
+  }
+  .photo-zone:active{background:var(--grape-tint);}
+  .photo-zone .big{font-size:40px;line-height:1;}
+  .photo-zone .lbl{font-weight:800;font-size:17px;}
+  .photo-zone .sub{font-size:13px;color:var(--ink-soft);font-weight:600;}
+  .preview-wrap{margin-top:4px;text-align:center;}
+  .preview-wrap img{max-width:100%;border-radius:16px;box-shadow:var(--shadow-sm);}
+  .retake{
+    margin-top:12px;background:none;border:none;color:var(--grape);
+    font:inherit;font-weight:800;font-size:15px;cursor:pointer;
+    text-decoration:underline;text-underline-offset:3px;
+  }
+  .hidden{display:none !important;}
+
+  /* ---------- primary button ---------- */
+  .ask-btn{
+    width:100%;margin-top:16px;border:none;cursor:pointer;
+    padding:17px;border-radius:18px;
+    background:linear-gradient(135deg,var(--grape) 0%, #8A5CF0 100%);
+    color:#fff;font:inherit;font-size:20px;font-weight:800;letter-spacing:.03em;
+    box-shadow:0 8px 20px rgba(108,76,224,.4);
+    transition:transform .12s ease, opacity .15s ease;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .ask-btn:active{transform:translateY(2px) scale(.99);}
+  .ask-btn:disabled{opacity:.45;box-shadow:none;cursor:default;}
+
+  /* ---------- loading ---------- */
+  .loading{text-align:center;padding:26px 10px 10px;}
+  .loading .owl{animation:bob 1.4s ease-in-out infinite;}
+  .loading p{font-weight:800;font-size:18px;color:var(--grape-dark);margin:14px 0 0;}
+  .dots span{
+    display:inline-block;width:9px;height:9px;margin:12px 4px 0;border-radius:50%;
+    background:var(--grape);opacity:.35;animation:blink 1.2s infinite;
+  }
+  .dots span:nth-child(2){animation-delay:.2s;}
+  .dots span:nth-child(3){animation-delay:.4s;}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-9px) rotate(2deg);}}
+  @keyframes blink{0%,100%{opacity:.3;transform:scale(1);}50%{opacity:1;transform:scale(1.35);}}
+
+  /* ---------- result ---------- */
+  .eyebrow{
+    font-size:13px;font-weight:800;letter-spacing:.08em;
+    color:var(--grape);text-transform:none;margin:0 0 8px;
+  }
+  .mondai-box{
+    background:var(--grape-tint);border-radius:16px;padding:15px 16px;
+    font-size:22px;font-weight:800;color:var(--ink);word-break:break-word;
+    border:2px solid #E3DAFB;
+  }
+  .mondai-note{font-size:12.5px;color:var(--ink-soft);margin:8px 2px 0;font-weight:600;}
+
+  .hint{
+    background:#FFFDF6;border:2px solid #FFE5AE;border-radius:16px;
+    padding:15px 16px 16px;margin-top:14px;
+    animation:pop .35s cubic-bezier(.2,.9,.3,1.3);
+  }
+  .hint .badge{
+    display:inline-flex;align-items:center;gap:6px;
+    background:var(--sun);color:#6a4b00;font-weight:800;font-size:13px;
+    padding:3px 11px;border-radius:999px;margin-bottom:8px;
+  }
+  .hint .txt{font-size:18px;font-weight:600;color:var(--ink);}
+  @keyframes pop{from{opacity:0;transform:translateY(10px) scale(.97);}to{opacity:1;transform:none;}}
+
+  .answer{
+    background:linear-gradient(135deg,#EAFBF3,#F3FDF8);
+    border:2px solid #B7EBD3;border-radius:18px;
+    padding:16px;margin-top:16px;animation:pop .4s cubic-bezier(.2,.9,.3,1.3);
+  }
+  .answer .badge{
+    display:inline-flex;align-items:center;gap:6px;
+    background:var(--mint);color:#fff;font-weight:800;font-size:13px;
+    padding:3px 12px;border-radius:999px;margin-bottom:10px;
+  }
+  .answer .steps{font-size:17px;white-space:pre-wrap;color:var(--ink);}
+  .kotae{
+    margin-top:14px;padding-top:14px;border-top:2px dashed #B7EBD3;
+    text-align:center;
+  }
+  .kotae .lbl{font-size:13px;font-weight:800;color:var(--mint);letter-spacing:.06em;}
+  .kotae .val{font-size:30px;font-weight:800;color:var(--ink);margin-top:2px;word-break:break-word;}
+
+  /* ---------- secondary buttons ---------- */
+  .next-btn{
+    width:100%;margin-top:16px;border:none;cursor:pointer;
+    padding:15px;border-radius:16px;
+    background:var(--sun);color:#6a4b00;font:inherit;font-size:18px;font-weight:800;
+    box-shadow:0 6px 16px rgba(255,201,60,.45);
+    transition:transform .12s ease;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .reveal-btn{
+    background:linear-gradient(135deg,var(--mint),#3ACB96);color:#fff;
+    box-shadow:0 6px 16px rgba(37,181,131,.4);
+  }
+  .next-btn:active{transform:translateY(2px) scale(.99);}
+  .reset-btn{
+    width:100%;margin-top:18px;border:2px solid var(--grape);cursor:pointer;
+    padding:14px;border-radius:16px;background:#fff;color:var(--grape-dark);
+    font:inherit;font-size:17px;font-weight:800;
+    transition:transform .12s ease, background .15s ease;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .reset-btn:active{transform:scale(.98);background:var(--grape-tint);}
+
+  /* ---------- error ---------- */
+  .error-box{text-align:center;padding:14px 6px 4px;}
+  .error-box .face{font-size:40px;}
+  .error-box p{font-size:17px;font-weight:700;color:var(--ink);margin:10px 0 0;}
+
+  .footnote{text-align:center;color:var(--ink-soft);font-size:12px;margin-top:26px;font-weight:600;}
+
+  :focus-visible{outline:3px solid var(--coral);outline-offset:2px;border-radius:8px;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important;transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <!-- クロード先生（フクロウ）のマスコット -->
+    <svg class="owl" id="owl" viewBox="0 0 120 120" role="img" aria-label="クロード先生">
+      <g class="owl-body">
+        <!-- ear tufts -->
+        <path d="M32 30 L26 12 L44 26 Z" fill="#5B3AC9"/>
+        <path d="M88 30 L94 12 L76 26 Z" fill="#5B3AC9"/>
+        <!-- body -->
+        <ellipse cx="60" cy="66" rx="40" ry="42" fill="#6C4CE0"/>
+        <ellipse cx="60" cy="72" rx="27" ry="30" fill="var(--owl-belly)"/>
+        <!-- eyes -->
+        <circle cx="45" cy="54" r="16" fill="#fff"/>
+        <circle cx="75" cy="54" r="16" fill="#fff"/>
+        <circle class="pupil" cx="45" cy="55" r="7" fill="#2D2A4A"/>
+        <circle class="pupil" cx="75" cy="55" r="7" fill="#2D2A4A"/>
+        <circle cx="42.5" cy="52" r="2.4" fill="#fff"/>
+        <circle cx="72.5" cy="52" r="2.4" fill="#fff"/>
+        <!-- glasses bridge (せんせいっぽさ) -->
+        <path d="M61 54 h-2" stroke="#4A2FB0" stroke-width="2.5" fill="none"/>
+        <!-- beak -->
+        <path d="M60 62 l-7 8 h14 Z" fill="#FF9F45"/>
+        <!-- feet -->
+        <path d="M50 106 v6 M46 112 h8" stroke="#FF9F45" stroke-width="3" stroke-linecap="round"/>
+        <path d="M70 106 v6 M66 112 h8" stroke="#FF9F45" stroke-width="3" stroke-linecap="round"/>
+      </g>
+    </svg>
+    <h1>教えてクロード先生</h1>
+    <p class="subtitle">わからない もんだいを おしえてね</p>
+  </header>
+
+  <!-- ========== 入力画面 ========== -->
+  <section class="card" id="screen-input">
+    <div class="modes" role="tablist">
+      <button class="mode-btn" id="tab-photo" role="tab" aria-selected="true" onclick="setMode('photo')">
+        <span class="ico">📷</span>しゃしん
+      </button>
+      <button class="mode-btn" id="tab-text" role="tab" aria-selected="false" onclick="setMode('text')">
+        <span class="ico">✏️</span>もじ
+      </button>
+    </div>
+
+    <!-- 写真モード -->
+    <div id="mode-photo">
+      <label class="photo-zone" id="photo-zone">
+        <span class="big">📸</span>
+        <span class="lbl">もんだいの しゃしんを とる</span>
+        <span class="sub">カメラか、アルバムから えらべるよ</span>
+        <input type="file" id="file-input" accept="image/*" class="hidden">
+      </label>
+      <div class="preview-wrap hidden" id="preview-wrap">
+        <img id="preview-img" alt="えらんだ しゃしん">
+        <button class="retake" onclick="clearPhoto()">↺ とりなおす</button>
+      </div>
+    </div>
+
+    <!-- 文字モード -->
+    <div id="mode-text" class="hidden">
+      <textarea id="text-input" placeholder="ここに もんだいを かいてね&#10;（れい：2×(25−□÷6)=36）" oninput="updateAskBtn()"></textarea>
+    </div>
+
+    <button class="ask-btn" id="ask-btn" onclick="ask()" disabled>
+      <span>🦉</span> せんせいに きく
+    </button>
+  </section>
+
+  <!-- ========== 考え中 ========== -->
+  <section class="card loading hidden" id="screen-loading">
+    <svg class="owl" viewBox="0 0 120 120" aria-hidden="true">
+      <use href="#owl-shape"></use>
+    </svg>
+    <p>クロード先生が かんがえているよ</p>
+    <div class="dots"><span></span><span></span><span></span></div>
+  </section>
+
+  <!-- ========== 結果 ========== -->
+  <section class="card hidden" id="screen-result">
+    <p class="eyebrow">よみとった もんだい</p>
+    <div class="mondai-box" id="out-mondai"></div>
+    <p class="mondai-note">ちがっていたら、下の「べつの もんだい」で もういちど とってみてね</p>
+
+    <div id="hints-area"></div>
+
+    <button class="next-btn hidden" id="next-hint-btn" onclick="showNextHint()">
+      つぎの ヒント →
+    </button>
+    <button class="next-btn reveal-btn hidden" id="reveal-btn" onclick="revealAnswer()">
+      こたえと ときかたを みる
+    </button>
+
+    <div id="answer-area"></div>
+
+    <button class="reset-btn" onclick="reset()">
+      🔄 べつの もんだいを きく
+    </button>
+  </section>
+
+  <!-- ========== エラー ========== -->
+  <section class="card hidden" id="screen-error">
+    <div class="error-box">
+      <div class="face">🙈</div>
+      <p id="error-msg">うまく つながらなかったみたい。もういちど ためしてね。</p>
+    </div>
+    <button class="reset-btn" onclick="reset()">🔄 もういちど</button>
+  </section>
+
+  <p class="footnote">クロード先生は AI だよ。まちがえることも あるので、こまったら おうちの人に きいてね。</p>
+</div>
+
+<script>
+  /* ====== せつぞく先（Supabase の受付） ====== */
+  const FUNCTION_URL = "https://jqtmibcnllvbpwvzxlea.supabase.co/functions/v1/clever-processor";
+  const SUPABASE_KEY = "sb_publishable_9ATK4N1-amyEWwJiCVgOJA_wpQ5Anka";
+
+  /* ====== じょうたい ====== */
+  let mode = "photo";
+  let photoData = null;          // {base64, media_type}
+  let hints = [];
+  let hintIndex = 0;
+  let answerData = { kaisetsu:"", kotae:"" };
+
+  /* ====== 画面きりかえ ====== */
+  const screens = ["input","loading","result","error"];
+  function show(name){
+    screens.forEach(s=>{
+      document.getElementById("screen-"+s).classList.toggle("hidden", s!==name);
+    });
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+
+  /* ====== 入力モード ====== */
+  function setMode(m){
+    mode = m;
+    document.getElementById("tab-photo").setAttribute("aria-selected", m==="photo");
+    document.getElementById("tab-text").setAttribute("aria-selected", m==="text");
+    document.getElementById("mode-photo").classList.toggle("hidden", m!=="photo");
+    document.getElementById("mode-text").classList.toggle("hidden", m!=="text");
+    updateAskBtn();
+  }
+
+  function updateAskBtn(){
+    const ready = (mode==="photo" && photoData) ||
+                  (mode==="text" && document.getElementById("text-input").value.trim().length>0);
+    document.getElementById("ask-btn").disabled = !ready;
+  }
+
+  /* ====== 写真：えらぶ・ちいさくする ====== */
+  document.getElementById("file-input").addEventListener("change", e=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    resizeImage(file).then(res=>{
+      photoData = { base64:res.base64, media_type:"image/jpeg" };
+      document.getElementById("preview-img").src = res.preview;
+      document.getElementById("preview-wrap").classList.remove("hidden");
+      document.getElementById("photo-zone").classList.add("hidden");
+      updateAskBtn();
+    }).catch(()=>{
+      alert("しゃしんを よみこめませんでした。べつの しゃしんで ためしてね。");
+    });
+  });
+
+  function clearPhoto(){
+    photoData = null;
+    document.getElementById("file-input").value = "";
+    document.getElementById("preview-wrap").classList.add("hidden");
+    document.getElementById("photo-zone").classList.remove("hidden");
+    updateAskBtn();
+  }
+
+  function resizeImage(file, maxDim=1400, quality=0.82){
+    return new Promise((resolve,reject)=>{
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = ()=>{
+        let w=img.naturalWidth, h=img.naturalHeight;
+        const scale = Math.min(1, maxDim/Math.max(w,h));
+        w=Math.round(w*scale); h=Math.round(h*scale);
+        const canvas=document.createElement("canvas");
+        canvas.width=w; canvas.height=h;
+        canvas.getContext("2d").drawImage(img,0,0,w,h);
+        URL.revokeObjectURL(url);
+        const dataUrl=canvas.toDataURL("image/jpeg",quality);
+        resolve({ base64:dataUrl.split(",")[1], preview:dataUrl });
+      };
+      img.onerror = ()=>{ URL.revokeObjectURL(url); reject(); };
+      img.src = url;
+    });
+  }
+
+  /* ====== せんせいに きく ====== */
+  async function ask(){
+    let payload;
+    if(mode==="photo"){
+      if(!photoData) return;
+      payload = { image_base64:photoData.base64, media_type:photoData.media_type };
+    }else{
+      const t = document.getElementById("text-input").value.trim();
+      if(!t) return;
+      payload = { problem_text:t };
+    }
+    show("loading");
+    try{
+      const res = await fetch(FUNCTION_URL,{
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          "Authorization":"Bearer "+SUPABASE_KEY,
+          "apikey":SUPABASE_KEY
+        },
+        body:JSON.stringify(payload)
+      });
+      const data = await res.json().catch(()=>null);
+      if(!res.ok){
+        throw new Error((data && (data.error||data.message)) || ("エラー "+res.status));
+      }
+      handleResult(data);
+    }catch(err){
+      showError(err && err.message);
+    }
+  }
+
+  /* ====== 返ってきた こたえを ならべる ====== */
+  function handleResult(data){
+    const d = (data && (data.result || data.data)) || data || {};
+    if(d.error){ showError(d.error); return; }
+
+    const mondai = d.mondai || d.problem || "（もんだいを よみとれませんでした）";
+    hints = Array.isArray(d.hints) ? d.hints.filter(x=>x && String(x).trim()) : [];
+    answerData = {
+      kaisetsu: d.kaisetsu || d.explanation || "",
+      kotae: d.kotae || d.answer || ""
+    };
+
+    if(hints.length===0 && !answerData.kaisetsu){
+      showError("うまく よみとれませんでした。もういちど、あかるい ところで とってみてね。");
+      return;
+    }
+
+    document.getElementById("out-mondai").textContent = mondai;
+    document.getElementById("hints-area").innerHTML = "";
+    document.getElementById("answer-area").innerHTML = "";
+    hintIndex = 0;
+    show("result");
+
+    if(hints.length>0){
+      renderHint(0);
+      hintIndex = 1;
+      updateHintButtons();
+    }else{
+      // ヒントが無ければ すぐ こたえボタン
+      document.getElementById("next-hint-btn").classList.add("hidden");
+      document.getElementById("reveal-btn").classList.remove("hidden");
+    }
+  }
+
+  function renderHint(i){
+    const el = document.createElement("div");
+    el.className = "hint";
+    el.innerHTML = '<span class="badge">💡 ヒント '+circled(i+1)+'</span><div class="txt"></div>';
+    el.querySelector(".txt").textContent = hints[i];
+    document.getElementById("hints-area").appendChild(el);
+  }
+
+  function showNextHint(){
+    if(hintIndex < hints.length){
+      renderHint(hintIndex);
+      hintIndex++;
+      updateHintButtons();
+      const nodes = document.querySelectorAll("#hints-area .hint");
+      nodes[nodes.length-1].scrollIntoView({behavior:"smooth", block:"center"});
+    }
+  }
+
+  function updateHintButtons(){
+    const moreHints = hintIndex < hints.length;
+    document.getElementById("next-hint-btn").classList.toggle("hidden", !moreHints);
+    document.getElementById("reveal-btn").classList.toggle("hidden", moreHints);
+  }
+
+  function revealAnswer(){
+    document.getElementById("reveal-btn").classList.add("hidden");
+    const box = document.createElement("div");
+    box.className = "answer";
+    let html = '<span class="badge">✅ こたえと ときかた</span>';
+    if(answerData.kaisetsu){
+      html += '<div class="steps"></div>';
+    }
+    if(answerData.kotae){
+      html += '<div class="kotae"><div class="lbl">こたえ</div><div class="val"></div></div>';
+    }
+    box.innerHTML = html;
+    if(answerData.kaisetsu) box.querySelector(".steps").textContent = answerData.kaisetsu;
+    if(answerData.kotae) box.querySelector(".kotae .val").textContent = answerData.kotae;
+    document.getElementById("answer-area").appendChild(box);
+    box.scrollIntoView({behavior:"smooth", block:"center"});
+  }
+
+  function circled(n){
+    const marks = ["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩"];
+    return marks[n-1] || ("("+n+")");
+  }
+
+  /* ====== エラー ====== */
+  function showError(msg){
+    document.getElementById("error-msg").textContent =
+      msg && String(msg).length<80 ? msg : "うまく つながらなかったみたい。もういちど ためしてね。";
+    show("error");
+  }
+
+  /* ====== さいしょに もどる ====== */
+  function reset(){
+    clearPhoto();
+    document.getElementById("text-input").value = "";
+    hints = []; hintIndex = 0; answerData = {kaisetsu:"",kotae:""};
+    updateAskBtn();
+    show("input");
+  }
+
+  /* ====== ローディング用のフクロウ（複製） ====== */
+  (function(){
+    const owl = document.getElementById("owl");
+    const clone = owl.cloneNode(true);
+    clone.removeAttribute("id");
+    const loadingOwl = document.querySelector("#screen-loading .owl");
+    loadingOwl.replaceWith(clone);
+    clone.classList.add("owl");
+  })();
+
+  setMode("photo");
+</script>
+</body>
+</html>
