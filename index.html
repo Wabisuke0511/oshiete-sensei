@@ -75,6 +75,23 @@
   }
   .mode-btn:active{transform:scale(.96);}
 
+  /* ---------- subject picker ---------- */
+  .subjects{display:flex;gap:6px;margin-bottom:16px;}
+  .subj-btn{
+    flex:1;border:none;cursor:pointer;
+    padding:11px 2px 9px;border-radius:14px;
+    background:var(--grape-tint);color:var(--grape-dark);
+    font:inherit;font-weight:800;
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+    transition:transform .12s ease, box-shadow .15s ease, background .15s ease;
+  }
+  .subj-btn .ico{font-size:23px;line-height:1;}
+  .subj-btn .name{font-size:12px;}
+  .subj-btn[aria-selected="true"]{
+    background:var(--grape);color:#fff;box-shadow:var(--shadow-sm);
+  }
+  .subj-btn:active{transform:scale(.94);}
+
   /* ---------- text input ---------- */
   textarea{
     width:100%;min-height:96px;resize:none;
@@ -246,6 +263,14 @@
 
   <!-- ========== 入力画面 ========== -->
   <section class="card" id="screen-input">
+    <div class="subjects" role="tablist" aria-label="きょうか">
+      <button class="subj-btn" id="subj-sansu"  role="tab" aria-selected="true"  onclick="setSubject('sansu')"><span class="ico">🔢</span><span class="name">さんすう</span></button>
+      <button class="subj-btn" id="subj-kokugo" role="tab" aria-selected="false" onclick="setSubject('kokugo')"><span class="ico">📖</span><span class="name">こくご</span></button>
+      <button class="subj-btn" id="subj-rika"   role="tab" aria-selected="false" onclick="setSubject('rika')"><span class="ico">🔬</span><span class="name">りか</span></button>
+      <button class="subj-btn" id="subj-shakai" role="tab" aria-selected="false" onclick="setSubject('shakai')"><span class="ico">🌏</span><span class="name">しゃかい</span></button>
+      <button class="subj-btn" id="subj-eigo"   role="tab" aria-selected="false" onclick="setSubject('eigo')"><span class="ico">🔤</span><span class="name">えいご</span></button>
+    </div>
+
     <div class="modes" role="tablist">
       <button class="mode-btn" id="tab-photo" role="tab" aria-selected="true" onclick="setMode('photo')">
         <span class="ico">📷</span>しゃしん
@@ -328,6 +353,7 @@
   const SUPABASE_KEY = "sb_publishable_9ATK4N1-amyEWwJiCVgOJA_wpQ5Anka";
 
   /* ====== じょうたい ====== */
+  let subject = "sansu";
   let mode = "photo";
   let photoData = null;          // {base64, media_type}
   let hints = [];
@@ -341,6 +367,23 @@
       document.getElementById("screen-"+s).classList.toggle("hidden", s!==name);
     });
     window.scrollTo({top:0, behavior:"smooth"});
+  }
+
+  /* ====== きょうか ====== */
+  const SUBJECT_IDS = ["sansu","kokugo","rika","shakai","eigo"];
+  const PLACEHOLDERS = {
+    sansu:  "ここに もんだいを かいてね\n（れい：2×(25−□÷6)=36）",
+    kokugo: "ここに もんだいを かいてね\n（れい：「登場」の よみかたは？）",
+    rika:   "ここに もんだいを かいてね\n（れい：どうして 月の かたちは かわるの？）",
+    shakai: "ここに もんだいを かいてね\n（れい：日本で いちばん 大きい みずうみは？）",
+    eigo:   "ここに もんだいを かいてね\n（れい：「りんご」は えいごで なんて いう？）",
+  };
+  function setSubject(s){
+    subject = s;
+    SUBJECT_IDS.forEach(id=>{
+      document.getElementById("subj-"+id).setAttribute("aria-selected", id===s);
+    });
+    document.getElementById("text-input").placeholder = PLACEHOLDERS[s] || PLACEHOLDERS.sansu;
   }
 
   /* ====== 入力モード ====== */
@@ -407,11 +450,11 @@
     let payload;
     if(mode==="photo"){
       if(!photoData) return;
-      payload = { image_base64:photoData.base64, media_type:photoData.media_type };
+      payload = { subject, image_base64:photoData.base64, media_type:photoData.media_type };
     }else{
       const t = document.getElementById("text-input").value.trim();
       if(!t) return;
-      payload = { problem_text:t };
+      payload = { subject, problem_text:t };
     }
     show("loading");
     try{
@@ -541,6 +584,7 @@
     clone.classList.add("owl");
   })();
 
+  setSubject("sansu");
   setMode("photo");
 </script>
 </body>
